@@ -7,11 +7,15 @@ if [ ! -f /usr/share/nginx/www/wp-config.php ]; then
   WORDPRESS_DB="wordpress"
   MYSQL_PASSWORD=`pwgen -c -n -1 12`
   WORDPRESS_PASSWORD=`pwgen -c -n -1 12`
+  SSH_PASSWORD=`pwgen -c -n -1 12`
   #This is so the passwords show up in logs. 
   echo mysql root password: $MYSQL_PASSWORD
   echo wordpress password: $WORDPRESS_PASSWORD
+  echo ssh root password: $SSH_PASSWORD
+  echo root:$SSH_PASSWORD | chpasswd
   echo $MYSQL_PASSWORD > /mysql-root-pw.txt
   echo $WORDPRESS_PASSWORD > /wordpress-db-pw.txt
+  echo $SSH_PASSWORD > /ssh-pw.txt
 
   sed -e "s/database_name_here/$WORDPRESS_DB/
   s/username_here/$WORDPRESS_DB/
@@ -24,6 +28,8 @@ if [ ! -f /usr/share/nginx/www/wp-config.php ]; then
   /'SECURE_AUTH_SALT'/s/put your unique phrase here/`pwgen -c -n -1 65`/
   /'LOGGED_IN_SALT'/s/put your unique phrase here/`pwgen -c -n -1 65`/
   /'NONCE_SALT'/s/put your unique phrase here/`pwgen -c -n -1 65`/" /usr/share/nginx/www/wp-config-sample.php > /usr/share/nginx/www/wp-config.php
+
+  sed -i 's/PermitRootLogin without-password/PermitRootLogin Yes/' /etc/ssh/sshd_config
 
   # Download nginx helper plugin
   curl -O `curl -i -s http://wordpress.org/plugins/nginx-helper/ | egrep -o "http://downloads.wordpress.org/plugin/[^']+"`
